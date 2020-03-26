@@ -1,18 +1,45 @@
 package spring.mvc.demo.controller;
 
+import org.springframework.format.datetime.DateFormatter;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.validation.Validator;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+
 
 @Controller
 @RequestMapping(value = "/web")
 public class WebController {
 
+    // 应用到所有的@RequestMapping注解方法，在其执行前初始化数据绑定器
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        System.out.println("------------initBinder---------------");
+        // 统一日期处理
+        binder.addCustomFormatter(new DateFormatter("yyyy-MM-dd"));
+        // 添加检验
+        binder.addValidators(sysValidator());
+    }
+    private Validator sysValidator() {
+        System.out.println("------------sysValidator---------------");
+        return null;
+    }
+
     @RequestMapping(value = "index")
     //ModelMap讲解如下
     public String index(ModelMap map){
+        int i = 0;
+        i = 1/0;
         map.addAttribute("title","freemarker hello word");
         return "freemarker/test1";
+    }
+    @RequestMapping(value = "err")
+    public String err(){
+
+        return "error/error";
     }
 }
 
