@@ -1,0 +1,74 @@
+四 自定义消息转化器
+    自定义消息转化器，只需要在@Configuration的类中添加消息转化器的@bean加入到Spring容器，就会被Spring boot自动加入到容器中。
+    @Configuration //比添加
+    public class Demo｛
+        @Bean
+        public StringHttpMessageConverter stringHttpMessageConverter() {
+            StringHttpMessageConverter converter = new StringHttpMessageConverter(Charset.forName("UTF-8"));
+            return converter;
+        }
+    ｝
+
+
+一  #本项目用来演示@ImportResource的用法
+
+二  #此项目用来解释注解的含义
+
+ 创建一个Spring boot 项目，进入@SpringBootApplication 注解，可以发现，这是里面有三个注解。
+ @SpringBootConfiguration  @EnableAutoConfiguration @ComponentScan
+1、@SpringBootConfiguration
+   标注这个类是一个配置类。进入此类，发现这个注解，只是@Configuration注解的派生注解，跟@Configuration注解的功能一致，
+   标注这个类是一个配置类，只不过@SpringBootConfiguration是springboot的注解，而@Configuration是spring的注解。
+
+2、@EnableAutoConfiguration
+    功能：启用自动配置，该注解会使Spring Boot根据项目中依赖的Jar包自动配置项目的配置项，
+    如：添加了spring-boot-start-web的依赖。项目中就会引入SpringMVC的依赖，Spring Boot就会自动配置tomcat和Spring MVC
+    原理：@EnableAutoConfiguration注解，又是一个组合注解：@AutoConfigurationPackage和@Import(AutoConfigurationImportSelector.class)
+	
+	@Import(AutoConfigurationImportSelector.class) 导入AutoConfigurationImportSelector.class类，此类用来加载所有META-INF下的配置文件
+	@AutoConfigurationPackage注解：自动配置包，自动注入主类下所在包下（com.badger.web.SpringbootHelloApplication），所有的加了注解的类（@Controller，@Service等），以及配置类（@Configuration）
+	
+	关于@Import注解，可以像@Configuration导入类或者组件，导入类，分三种
+	1）直接导入普通的类
+	2）导入实现了ImportSelector接口的类
+	3）导入实现了ImportBeanDefinitionRegistrar接口的类
+3、 @ComponentScan： 指定包路径扫描，把@Controller、@Service、@Repository，@Component标注的类，实例化到spring容器中
+	@Filter： 是@ComponentScan注解类中的子注解（内部注解），可以指定一些过滤规
+         FilterType.ANNOTATION：按照注解注入
+         FilterType.ASSIGNABLE_TYPE：按照给定的类型注入
+         FilterType.ASPECTJ：使用ASPECTJ表达式
+         FilterType.REGEX：使用正则指定
+         FilterType.CUSTOM：使用自定义规则
+	@ComponentScans：是@ComponentScan注解的集合，里面可以指定多个@ComponentScan注解，扫描多个包路径
+
+三  条件注解
+比如@ConditionalOnBean、@ConditionalOnClass、@ConditionalOnExpression、@ConditionalOnMissingBean等
+@ConditionalOnClass会检查类加载器中是否存在对应的类，如果有的话被注解修饰的类就有资格被Spring容器所注册，否则会被skip。
+
+@Configuration
+public class Configuration1 {
+
+    @Bean
+    @ConditionalOnBean(Bean2.class)
+    public Bean1 bean1() {
+        return new Bean1();
+    }
+}
+
+@Configuration
+public class Configuration2 {
+
+    @Bean
+    public Bean2 bean2(){
+        return new Bean2();
+    }
+}
+
+在spring ioc的过程中，优先解析@Component，@Service，@Controller注解的类。其次解析配置类，也就是@Configuration标注的类。最后开始解析配置类中定义的bean。
+示例代码中bean1是定义在配置类中的，当执行到配置类解析的时候，@Component，@Service，@Controller ,@Configuration标注的类已经全部扫描，所以这些BeanDifinition已经被同步。 但是bean1的条件注解依赖的是bean2，bean2是被定义的配置类中的，所以此时配置类的解析无法保证先后顺序，就会出现不生效的情况。
+
+解决:
+以下两种方式：
+    1.项目中条件注解依赖的类，大多会交给spring容器管理，所以如果要在配置中Bean通过@ConditionalOnBean依赖配置中的Bean时，完全可以用@ConditionalOnClass(Bean2.class)来代替。
+    2.如果一定要区分两个配置类的先后顺序，可以将这两个类交与EnableAutoConfiguration管理和触发。也就是定义在META-INF\spring.factories中声明是配置类，然后通过@AutoConfigureBefore、AutoConfigureAfter  AutoConfigureOrder控制先后顺序。之所以这么做是因为这三个注解只对自动配置类的先后顺序生效。
+
