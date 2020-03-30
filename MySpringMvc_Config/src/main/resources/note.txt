@@ -1,0 +1,40 @@
+1.tomcat配置默认访问页面
+进入 tomcat 的 conf 目录，编辑 web.xml 文件。在 添加默认访问页面。
+
+<welcome-file-list>
+	<welcome-file>index.html</welcome-file>
+	<welcome-file>index.jsp</welcome-file>
+</welcome-file-list>
+
+2.Spring Boot设置index默认页面
+新建一个类，继承WebMvcConfigurerAdapter，并加上@Configuration，此方式在tomcat没有配置默认访问页面的情况下生效。
+@Configuration
+public class DefalutPage extends WebMvcConfigurerAdapter {
+	@Override
+	public void addViewControllers( ViewControllerRegistry registry )
+	{
+    	registry.addViewController( "/" ).setViewName( "forward:/index.html" );
+    	registry.setOrder( Ordered.HIGHEST_PRECEDENCE );
+    	super.addViewControllers( registry );
+		}
+	}
+
+3.配置根节点访问“/”方式
+在 Controller 配置一个名为 “/” 的访问路径。当输入完网址后就会调用。此方式在前面三种都没有配置的情况才会调用。
+@RequestMapping(value="/")
+    public String index(){
+    	return "index";
+    }
+}
+
+4.Controller 配置index默认页面
+如果tomcat和Spring Boot没有配置默认访问页面，Spring 会主动去寻找 Controller 的 index。如果有则会调用，否则会报404错误。
+@RequestMapping(value="/index")
+	public String index(){
+		return "index";
+	}
+}
+
+优先级：1 > 2 > 3 > 4。因为tomcat的优先级比Spring高，相应于是最高的。以上的配置，都会先去tomcat是否配置默认访
+问页面。第2种方式由于设置了HIGHEST_PRECEDENCE，给的权限是最高的，所以比3、4两种优先级高。第3种因为Controller配
+置了"/",会优先匹配，而不是寻找/index的Controller。
