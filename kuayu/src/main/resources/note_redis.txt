@@ -1,0 +1,39 @@
+技术点：
+    SpringBoot 结合 JDBCTemplate 和 redis实现数据库中的数据存入redis中，并且从redis中拿数据返回给前端
+
+JSONObject 使用详解：
+    依赖支持fastJson
+    fastJson是阿里巴巴出品的一个json序列化工具,我们需要下载对应的jar。
+·将对象转换成Json串，可以用下面的方法：
+    JSON.toJSONString(对象);
+ ·将Json串转换成java对象，分为两种情况：
+    //对象是单个元素
+    JSON.parseObject(json串，CLAZZ);
+    //对象包含多个元素
+    JSON.parseArray(json串，CLAZZ);
+
+ ·下面是转换实例：
+    List <---->Json
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("aaa");
+    stringList.add("bbb");
+    stringList.add("ccc");
+    stringList.add("ddd");
+    //list-->json
+    String jsonString = JSON.toJSONString(stringList);
+    //json-->list
+    List<String> list =JSON.parseArray(jsonString,String.class);
+
+    Map <---->Json
+
+    Map<String,Integer> map = new HashMap<>();
+    map.put("zhangsan", 18);
+    map.put("lisi", 28);
+    map.put("wangwu", 38);
+    //map-->json
+    String jsonString2 = JSON.toJSONString(map);
+    //json-->map
+    Map<String,Integer> map2 =JSON.parseObject(jsonString2,Map.class);
+
+
