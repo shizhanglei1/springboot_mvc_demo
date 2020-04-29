@@ -1,0 +1,32 @@
+tomcat的原理及实现方式，请参考如下链接
+https://blog.csdn.net/zhangjingao/category_7724068.html
+
+线程相关的文件说明，请参考：com.zjg.tomdog.thread.ThreadPoolFactory.class 的注解
+遍历map的四种方法，请参考：com.zjg.tomdog.annotations.ServletMapping.class 的注解
+
+tomcat在运行中需要做下面几个事情：
+1.Main方法：
+servlet程序是没有Main的，但是一个程序没有Main是无法启动的，所以tomcat需要有Main方法。
+2.得到所有的servlet，得到servlet类和servlet地址的映射关系
+tomcat要判断哪些类是servlet，并可以根据地址实例化servlet对象。
+3.同时接受多个请求
+tomcat要满足多个客户端的同时访问，所以需要多线程接收多个请求。
+4.处理请求
+如果是请求的静态资源就直接定位静态资源写回客户端，如果请求的servlet，那么定位具体的请求的servlet并调用。
+得到响应并返回客户端
+
+架构解读：
+    1.annotations:
+        WebService类是一个自定义注解，凡是实现了HttpServlet接口并且被WebService注解标志的才被认为是servlet。
+        ServletMapping类是将所有的servlet装进一个Map集合中
+    2.controller:
+        是一个模拟web应用的包，我们整个项目是一个tomcat，如果再新建一个项目作为web项目，然后加载这个项目
+        去调用web项目中的servlet就比较麻烦，于是这个包就是一个模拟的web应用，里面有普通的类还有servlet
+    3.handle:
+        这个包起到的作用就是接收请求，监听80端口，接收客户端请求。
+    4.handlecore和handlecoreimpl包：
+        分别是处理请求接口包和处理请求实现类包，主要功能有读取请求，判断请求的资源类型，转发调用servlet，
+        关闭连接。
+    5. servletdefine：定义servlet的接口，定义其必须实现的get和post方法。
+    6. thread：多线程包，分出一个线程进行处理客户端请求。
+    7. util：工具包,判断请求资源类型，request请求定义，response定义
